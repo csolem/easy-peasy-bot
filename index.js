@@ -7,6 +7,7 @@ var _ = require('underscore');
 var cron = require('node-cron');
 var fs = require('fs');
 
+let pendingInvitations = [];
 /**
  * Define a function for initiating a conversation on installation
  * With custom integrations, we don't have a way to find out who installed us, so we can't message them :(
@@ -33,6 +34,7 @@ function inviteUsers(bot, users) {
   return Promise.all(users.map((user) => {
     return new Promise((resolve, reject) => {
       bot.startPrivateConversation({user: user.id, text: 'Tjena'}, (err, conversation) => {
+        pendingInvitations.push({user, conversation, resolve, reject});
         if(err) {
           console.error(err)
         }else{
@@ -42,6 +44,7 @@ function inviteUsers(bot, users) {
               callback: function(response,convo) {
                 convo.say('Jättekul! Det här blir hur bra som helst');
                 convo.next();
+                pendingInvitations = pendingInvitations.filter((pendingInvitation) => pendingInvitation.user.id != user.id);
                 resolve(user);
               }
             },
@@ -57,7 +60,7 @@ function inviteUsers(bot, users) {
               default: true,
               callback: function(response,convo) {
                 convo.say('Nu fattade jag inte helt var du sa kompis');
-                convo.repeat();
+                convo.silentRepeat();
                 convo.next();
               }
             }
@@ -123,14 +126,15 @@ controller.on('rtm_open', function (bot) {
         console.log("Fetched members: ", members);
     
         let randomMembers = findRandomMembers(2, members).map((id) =>({id}));
+        console.log("Generated a list of random members: ", randomMembers);
         let replies = inviteUsers(bot, randomMembers);
       replies.then((users)=>{
         console.log(users);
 
-        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${users.join(' ')} fika tillsammans i lunchrummet pa andra vaningen i glasgarden:tada:\n ${users[Math.floor(Math.random()*users.length)]} Koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du far en ny chans i morgon :nerd_face:`})
+        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${users.join(' ')} fika tillsammans i lunchrummet på andra vaningen i glasgården:tada:\n ${users[Math.floor(Math.random()*users.length)]} Koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du får en ny chans i morgon :nerd_face:`})
       })
+      startCrontab(bot);
         
-        console.log("Generated a list of random members: ", randomMembers);
 
         let invitation = {
             time: new Date(),
@@ -152,8 +156,47 @@ function invitationExists() {
 function readInvitation() {
     return JSON.parse(fs.readFileSync(INVITATION_FILE));
 }
-
+function startCrontab(bot) {
 cron.schedule('* * * * *', () => {  
+    console.log(pendingInvitations)
+  pendingInvitations.forEach((pendingInvitation) => {
+    const {user, conversation, resolve, reject} = pendingInvitation;
+    if (pendingInvitation.isRepeated) {
+      conversation.repeat();
+      conversation.next();
+      return;
+    }
+    conversation.isRepeated = true;
+
+    conversation.addQuestion('Horru blir\'u med eller inte? Plz svara :smile:',[
+      {
+        pattern: /^ja/i,
+        callback: function(response,convo) {
+          convo.say('Jättekul! Det här blir hur bra som helst');
+          convo.next();
+          pendingInvitations = pendingInvitations.filter((pendingInvitation) => pendingInvitation.user.id != user.id);
+          resolve(user);
+        }
+      },
+      {
+        pattern: /^ne[ij]/i,
+        callback: function(response,convo) {
+          convo.say('Tråkmåns.. jaja kanske en annan gång då :D');
+          convo.next();
+          reject();
+        }
+      },
+      {
+        default: true,
+        callback: function(response,convo) {
+          convo.say('Nu fattade jag inte helt var du sa kompis');
+          convo.silentRepeat();
+          convo.next();
+        }
+      }
+    ]);
+    conversation.next();
+  })
 
     if (invitationExists()) {
         
@@ -174,6 +217,8 @@ cron.schedule('* * * * *', () => {
         console.log("No invitation exist");
     }
 });
+}
+
 
 controller.on('rtm_close', function (bot) {
     console.log('** The RTM api just closed');
