@@ -4,7 +4,8 @@
 
 
 var _ = require('underscore');
-
+var cron = require('node-cron');
+var fs = require('fs');
 
 /**
  * Define a function for initiating a conversation on installation
@@ -115,6 +116,7 @@ if (process.env.TOKEN || process.env.SLACK_TOKEN) {
  */
 
 const CHANNEL = "CFN8CPJKY";
+const INVITATION_FILE = "invitation.json";
 var members = [];
 
 // Handle events related to the websocket connection to Slack
@@ -129,10 +131,46 @@ controller.on('rtm_open', function (bot) {
         console.log("Generated a list of random members: ", randomMembers);
 
         let invitation = {
-            time: "",
-            invitedMembers: randomMembers
+            time: new Date(),
+            invitedMembers: randomMembers,
+            membersInvited: false
+        };
+        saveInvitiation(invitation);
+    });
+});
+
+function saveInvitiation(invitation) {
+    fs.writeFileSync(INVITATION_FILE, JSON.stringify(invitation));
+}
+
+function invitationExists() {
+    return fs.existsSync(INVITATION_FILE)
+}
+
+function readInvitation() {
+    return JSON.parse(fs.readFileSync(INVITATION_FILE));
+}
+
+cron.schedule('* * * * *', () => {  
+
+    if (invitationExists()) {
+        
+        let invitation = readInvitation();
+        console.log("Found invitation: ", invitation);
+                
+        if(!invitation.membersInvited) {
+            // initiate dialogoue with users
+            console.log("About to invite members to fika!");
+
+            invitation.membersInvited = true;
+
+            saveInvitiation(invitation);
+        } else {
+            console.log("Members already invited.");
         }
-    })
+    } else {
+        console.log("No invitation exist");
+    }
 });
 
 controller.on('rtm_close', function (bot) {
