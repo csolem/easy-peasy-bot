@@ -27,6 +27,49 @@ function onInstallation(bot, installer) {
 function findRandomMembers(numberOfChosenMembers, members) {
     return _.sample(members, numberOfChosenMembers);
 }
+function inviteUsers(users) {
+  return Promise.all(users.map((user) => {
+    return new Promise((resolve, reject) => {
+      const botInit = controller.spawn({token: process.env.TOKEN});
+      botInit.startRTM(function(err,bot,payload) {
+        if (err) {
+          throw new Error('Could not connect to Slack');
+        }
+        bot.startPrivateConversation({user.id, text: 'Tjena'}, (err, conversation) => {
+          if(err) {
+            console.error(err)
+          }else{
+            conversation.addQuestion('Tjenare Kompis!\nSkall du med a fika klockan 2?\nSvara Ja/Nej sa fort som möjlig',[
+              {
+                pattern: /^ja/i,
+                callback: function(response,convo) {
+                  convo.say('Jättekul! Det här blir hur bra som helst');
+                  resolve(user);
+                }
+              },
+              {
+                pattern: /^ne[ij]/i,
+                callback: function(response,convo) {
+                  convo.say('Tråkmåns.. jaja kanske en annan gång då :D');
+                  reject();
+                }
+              },
+              {
+                default: true,
+                callback: function(response,convo) {
+                  convo.say('Nu fattade jag inte helt var du sa kompis');
+                  convo.repeat();
+                  convo.next();
+                }
+              }
+            ]);
+          }
+        });
+      });
+
+    });
+  }));
+}
 
 /**
  * Configure the persistence options
@@ -115,44 +158,6 @@ controller.hears('hello', 'direct_mention', function (bot, message) {
     bot.reply(message, 'Hello!');
 });
 
-
-const botInit = controller.spawn({token: process.env.TOKEN});
-botInit.startRTM(function(err,bot,payload) {
-  if (err) {
-    throw new Error('Could not connect to Slack');
-  }
-  bot.startPrivateConversation({user: 'U0DL5N1L4', text: 'Tjena'}, (err, conversation) => {
-    if(err) {
-      console.error(err)
-    }else{
-      conversation.addQuestion('Skall du med a fika klockan 2 kexet?',[
-        {
-          pattern: /ja/i,
-          callback: function(response,convo) {
-            convo.say('Jattekul! Det har blir hur bra som helst');
-            convo.next();
-          }
-        },
-        {
-          pattern: /ne[ij]/i,
-          callback: function(response,convo) {
-            convo.say('jaja, inte kanske en annan gang da');
-            convo.next();
-          }
-        },
-        {
-          default: true,
-          callback: function(response,convo) {
-            convo.say('Nu fattade jag inte helt var du sa kompis');
-            convo.repeat();
-            convo.next();
-          }
-        }
-      ]);
-
-    }
-  });
-});
 
 /**
  * AN example of what could be:
