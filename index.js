@@ -26,48 +26,44 @@ function onInstallation(bot, installer) {
 }
 
 function findRandomMembers(numberOfChosenMembers, members) {
-    return _.sample(members, numberOfChosenMembers);
+  return ['U0DL5N1L4','UDU6KE0A0'];
+    // return _.sample(members, numberOfChosenMembers);
 }
-function inviteUsers(users) {
+function inviteUsers(bot, users) {
   return Promise.all(users.map((user) => {
     return new Promise((resolve, reject) => {
-      const botInit = controller.spawn({token: process.env.TOKEN});
-      botInit.startRTM(function(err,bot,payload) {
-        if (err) {
-          throw new Error('Could not connect to Slack');
-        }
-        bot.startPrivateConversation({user.id, text: 'Tjena'}, (err, conversation) => {
-          if(err) {
-            console.error(err)
-          }else{
-            conversation.addQuestion('Tjenare Kompis!\nSkall du med a fika klockan 2?\nSvara Ja/Nej sa fort som möjlig',[
-              {
-                pattern: /^ja/i,
-                callback: function(response,convo) {
-                  convo.say('Jättekul! Det här blir hur bra som helst');
-                  resolve(user);
-                }
-              },
-              {
-                pattern: /^ne[ij]/i,
-                callback: function(response,convo) {
-                  convo.say('Tråkmåns.. jaja kanske en annan gång då :D');
-                  reject();
-                }
-              },
-              {
-                default: true,
-                callback: function(response,convo) {
-                  convo.say('Nu fattade jag inte helt var du sa kompis');
-                  convo.repeat();
-                  convo.next();
-                }
+      bot.startPrivateConversation({user: user.id, text: 'Tjena'}, (err, conversation) => {
+        if(err) {
+          console.error(err)
+        }else{
+          conversation.addQuestion('Tjenare Kompis!\nSkall du med a fika klockan 2?\nSvara Ja/Nej sa fort som möjlig',[
+            {
+              pattern: /^ja/i,
+              callback: function(response,convo) {
+                convo.say('Jättekul! Det här blir hur bra som helst');
+                convo.next();
+                resolve(user);
               }
-            ]);
-          }
-        });
+            },
+            {
+              pattern: /^ne[ij]/i,
+              callback: function(response,convo) {
+                convo.say('Tråkmåns.. jaja kanske en annan gång då :D');
+                convo.next();
+                reject();
+              }
+            },
+            {
+              default: true,
+              callback: function(response,convo) {
+                convo.say('Nu fattade jag inte helt var du sa kompis');
+                convo.repeat();
+                convo.next();
+              }
+            }
+          ]);
+        }
       });
-
     });
   }));
 }
@@ -126,7 +122,13 @@ controller.on('rtm_open', function (bot) {
         members = list.channel.members;
         console.log("Fetched members: ", members);
     
-        let randomMembers = findRandomMembers(2, members);
+        let randomMembers = findRandomMembers(2, members).map((id) =>({id}));
+        let replies = inviteUsers(bot, randomMembers);
+      replies.then((users)=>{
+        console.log(users);
+
+        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${users.join(' ')} fika tillsammans i lunchrummet pa andra vaningen i glasgarden:tada:\n ${users[Math.floor(Math.random()*users.length)]} Koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du far en ny chans i morgon :nerd_face:`})
+      })
         
         console.log("Generated a list of random members: ", randomMembers);
 
