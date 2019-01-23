@@ -85,6 +85,10 @@ controller.on('rtm_open', function (bot) {
         
         console.log("Generated a list of random members: ", randomMembers);
 
+        let invitation = {
+            time: "",
+            invitedMembers: randomMembers
+        }
     })
 });
 
