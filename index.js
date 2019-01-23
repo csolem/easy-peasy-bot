@@ -128,7 +128,8 @@ controller.on('rtm_open', function (bot) {
         console.log(users);
 
         let usersString = usersString(users);
-        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${usersString} fika tillsammans i lunchrummet pa andra vaningen i glasgarden:tada:\n ${users[Math.floor(Math.random()*users.length)]} Koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du far en ny chans i morgon :nerd_face:`})
+        let responsibleUser = findRandomMembers(1, users).map((id) =>({id}));
+        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${usersString} fika tillsammans i lunchrummet pa andra vaningen i glasgarden:tada:\n ${responsibleUser} koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du far en ny chans i morgon :nerd_face:`})
       })
         
         console.log("Generated a list of random members: ", randomMembers);
