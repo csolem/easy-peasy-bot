@@ -67,12 +67,14 @@ if (process.env.TOKEN || process.env.SLACK_TOKEN) {
  */
 
 const CHANNEL = "CFN8CPJKY";
+var members = [];
 
 // Handle events related to the websocket connection to Slack
 controller.on('rtm_open', function (bot) {
     console.log('** The RTM api just connected!');
     bot.api.channels.info({channel: CHANNEL}, function(err, list) {
-        console.log(list);
+        members = list.members;
+        console.log("Fetched members: ", list.channel.members);
     })
 });
 
