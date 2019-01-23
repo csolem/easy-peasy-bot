@@ -3,6 +3,9 @@
  */
 
 
+var _ = require('underscore');
+
+
 /**
  * Define a function for initiating a conversation on installation
  * With custom integrations, we don't have a way to find out who installed us, so we can't message them :(
@@ -21,6 +24,9 @@ function onInstallation(bot, installer) {
     }
 }
 
+function findRandomMembers(numberOfChosenMembers, members) {
+    return _.sample(members, numberOfChosenMembers);
+}
 
 /**
  * Configure the persistence options
@@ -56,7 +62,6 @@ if (process.env.TOKEN || process.env.SLACK_TOKEN) {
     process.exit(1);
 }
 
-
 /**
  * A demonstration for how to handle websocket events. In this case, just log when we have and have not
  * been disconnected from the websocket. In the future, it would be super awesome to be able to specify
@@ -65,9 +70,26 @@ if (process.env.TOKEN || process.env.SLACK_TOKEN) {
  *
  * TODO: fixed b0rked reconnect behavior
  */
+
+const CHANNEL = "CFN8CPJKY";
+var members = [];
+
 // Handle events related to the websocket connection to Slack
 controller.on('rtm_open', function (bot) {
     console.log('** The RTM api just connected!');
+    bot.api.channels.info({channel: CHANNEL}, function(err, list) {
+        members = list.channel.members;
+        console.log("Fetched members: ", members);
+    
+        let randomMembers = findRandomMembers(2, members);
+        
+        console.log("Generated a list of random members: ", randomMembers);
+
+        let invitation = {
+            time: "",
+            invitedMembers: randomMembers
+        }
+    })
 });
 
 controller.on('rtm_close', function (bot) {
