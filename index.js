@@ -123,6 +123,7 @@ controller.on('rtm_open', function (bot) {
         console.log("Fetched members: ", members);
     
         let randomMembers = findRandomMembers(2, members).map((id) =>({id}));
+        //let randomMembers = [{id: "UDU6KE0A0"}];
         console.log("Generated a list of random members: ", randomMembers);
 
         let replies = inviteUsers(bot, randomMembers);
@@ -130,14 +131,19 @@ controller.on('rtm_open', function (bot) {
       replies.then((users)=>{
         console.log(users);
 
-        let usersString = usersString(users);
-        let responsibleUser = userMention(findRandomMembers(1, users));
+        let usersString = userMentions(users);
+
+        // Random buyer. Poor person.
+        let responsibleUser = userMention(_.sample(members, numberOfChosenMembers));        
+        //let responsibleUser = userMention({id: "UDU6KE0A0"});
+
+        console.log("This person is chosen to buy stuff:", responsibleUser);
         bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${usersString} fika tillsammans i lunchrummet pa andra vaningen i glasgarden:tada:\n ${responsibleUser} koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du far en ny chans i morgon :nerd_face:`})
       })
     });
 });
 
-function usersString(users) {
+function userMentions(users) {
     if(users) {
         return users.map(user => userMention(user)).join(' ');
     }
