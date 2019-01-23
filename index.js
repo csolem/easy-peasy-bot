@@ -213,17 +213,8 @@ cron.schedule('* * * * *', () => {
         
         let invitation = readInvitation();
         console.log("Found invitation: ", invitation);
-                
-        if(!invitation.membersInvited) {
-            // initiate dialogoue with users
-            console.log("About to invite members to fika!");
-
-            invitation.membersInvited = true;
-
-            saveInvitiation(invitation);
-        } else {
-            console.log("Members already invited.");
-        }
+        
+        // Determine if it's about to send 14:00 notification in channel
     } else {
         console.log("No invitation exist");
     }
