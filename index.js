@@ -109,6 +109,7 @@ function readInvitation() {
 }
 
 cron.schedule('* * * * *', () => {  
+
     if (invitationExists()) {
         
         let invitation = readInvitation();
@@ -117,6 +118,12 @@ cron.schedule('* * * * *', () => {
         if(!invitation.membersInvited) {
             // initiate dialogoue with users
             console.log("About to invite members to fika!");
+
+            invitation.membersInvited = true;
+
+            saveInvitiation(invitation);
+        } else {
+            console.log("Members already invited.");
         }
     } else {
         console.log("No invitation exist");
