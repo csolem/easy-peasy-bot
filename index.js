@@ -110,10 +110,13 @@ function readInvitation() {
 
 cron.schedule('* * * * *', () => {  
     if (invitationExists()) {
+        
         let invitation = readInvitation();
+        console.log("Found invitation: ", invitation);
                 
         if(!invitation.membersInvited) {
             // initiate dialogoue with users
+            console.log("About to invite members to fika!");
         }
     } else {
         console.log("No invitation exist");
