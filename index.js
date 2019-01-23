@@ -93,6 +93,45 @@ controller.hears('hello', 'direct_mention', function (bot, message) {
     bot.reply(message, 'Hello!');
 });
 
+
+const botInit = controller.spawn({token: process.env.TOKEN});
+botInit.startRTM(function(err,bot,payload) {
+  if (err) {
+    throw new Error('Could not connect to Slack');
+  }
+  bot.startPrivateConversation({user: 'U0DL5N1L4', text: 'Tjena'}, (err, conversation) => {
+    if(err) {
+      console.error(err)
+    }else{
+      conversation.addQuestion('Skall du med a fika klockan 2 kexet?',[
+        {
+          pattern: /ja/i,
+          callback: function(response,convo) {
+            convo.say('Jattekul! Det har blir hur bra som helst');
+            convo.next();
+          }
+        },
+        {
+          pattern: /ne[ij]/i,
+          callback: function(response,convo) {
+            convo.say('jaja, inte kanske en annan gang da');
+            convo.next();
+          }
+        },
+        {
+          default: true,
+          callback: function(response,convo) {
+            convo.say('Nu fattade jag inte helt var du sa kompis');
+            convo.repeat();
+            convo.next();
+          }
+        }
+      ]);
+
+    }
+  });
+});
+
 /**
  * AN example of what could be:
  * Any un-handled direct mention gets a reaction and a pat response!
