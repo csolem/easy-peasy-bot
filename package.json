@@ -28,6 +28,7 @@
     "botkit": "0.2.2",
     "botkit-storage-mongo": "^1.0.2",
     "mongodb": "^1.4.39",
+    "node-cron": "^2.0.3",
     "underscore": "^1.9.1"
   }
 }
