@@ -128,22 +128,27 @@ controller.on('rtm_open', function (bot) {
         let randomMembers = findRandomMembers(2, members).map((id) =>({id}));
         console.log("Generated a list of random members: ", randomMembers);
         let replies = inviteUsers(bot, randomMembers);
+
       replies.then((users)=>{
         console.log(users);
 
-        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${users.join(' ')} fika tillsammans i lunchrummet på andra vaningen i glasgården:tada:\n ${users[Math.floor(Math.random()*users.length)]} Koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du får en ny chans i morgon :nerd_face:`})
+        let usersString = usersString(users);
+        let responsibleUser = userMention(findRandomMembers(1, users));
+        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${usersString} fika tillsammans i lunchrummet pa andra vaningen i glasgarden:tada:\n ${responsibleUser} koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du far en ny chans i morgon :nerd_face:`})
       })
-      startCrontab(bot);
-        
-
-        let invitation = {
-            time: new Date(),
-            invitedMembers: randomMembers,
-            membersInvited: false
-        };
-        saveInvitiation(invitation);
     });
 });
+
+function usersString(users) {
+    if(users) {
+        return users.map(user => userMention(user)).join(' ');
+    }
+    return '';
+}
+
+function userMention(user) {
+    return "<@" + user.id + ">";
+}
 
 function saveInvitiation(invitation) {
     fs.writeFileSync(INVITATION_FILE, JSON.stringify(invitation));
