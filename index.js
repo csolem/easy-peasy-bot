@@ -7,6 +7,8 @@ var _ = require('underscore');
 var cron = require('node-cron');
 var fs = require('fs');
 
+const GROUP_SIZE = 2;
+
 let pendingInvitations = [];
 /**
  * Define a function for initiating a conversation on installation
@@ -125,13 +127,17 @@ controller.on('rtm_open', function (bot) {
         members = list.channel.members;
         console.log("Fetched members: ", members);
     
-        let randomMembers = findRandomMembers(2, members).map((id) =>({id}));
+        let randomMembers = findRandomMembers(GROUP_SIZE, members).map((id) =>({id}));
         //let randomMembers = [{id: "UDU6KE0A0"}];
         console.log("Generated a list of random members: ", randomMembers);
         let replies = inviteUsers(bot, randomMembers);
 
       replies.then((users)=>{
         console.log(users);
+        if(users.length < GROUP_SIZE ) {
+            console.log("We need more peops in the group", user);
+            // 
+        }
 
         let usersString = userMentions(users);
 
