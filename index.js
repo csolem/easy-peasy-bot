@@ -172,8 +172,8 @@ function startGenerateFikaCrontab(bot) {
                 console.log(`choosen users: ${acceptedUsers}`);
                 if(acceptedUsers.length === 0 ) {
                     console.log("We need more peops in the group", acceptedUsers);
-                let rejectedUsersString = userMentions(randomMembers);
-                bot.say({channel: CHANNEL, text: `I dag var det ingen som ville fika :cry:, fy fabian for er: ${rejectedUsersString}`})
+                    let rejectedUsersString = userMentions(randomMembers);
+                    bot.say({channel: CHANNEL, text: `I dag var det ingen som ville fika :cry:, fy fabian for er: ${rejectedUsersString}`})
                     return; 
                 }
 
