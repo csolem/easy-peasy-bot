@@ -157,7 +157,7 @@ function readInvitation() {
  */
 //cron.schedule('*/10 9-11 * * 1-4'
 function startGenerateFikaCrontab(bot) {
-    cron.schedule('* 9-11 * * 1-4', () => {  
+    cron.schedule('*/10 9-11 * * 1-4', () => {  
         bot.api.channels.info({channel: CHANNEL}, function(err, list) {
             members = list.channel.members;
             console.log("Fetched members: ", members);
