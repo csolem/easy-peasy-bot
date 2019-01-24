@@ -34,9 +34,9 @@ function findRandomMembers(numberOfChosenMembers, members) {
 }
 function inviteUsers(bot, users) {
   return Promise.all(users.map((user) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       bot.startPrivateConversation({user: user.id, text: 'Tjena'}, (err, conversation) => {
-        pendingInvitations.push({user, conversation, resolve, reject});
+        pendingInvitations.push({user, conversation, resolve});
         if(err) {
           console.error(err)
         }else{
@@ -55,7 +55,7 @@ function inviteUsers(bot, users) {
               callback: function(response,convo) {
                 convo.say('Tråkmåns.. jaja kanske en annan gång då :D');
                 convo.next();
-                reject();
+                resolve();
               }
             },
             {
@@ -133,27 +133,30 @@ controller.on('rtm_open', function (bot) {
         let replies = inviteUsers(bot, randomMembers);
 
       replies.then((users)=>{
-        console.log(users);
-        if(users.length < GROUP_SIZE ) {
-            console.log("We need more peops in the group", user);
-            // 
+        const acceptedUsers = users.filter(Boolean);
+        console.log(`choosen users: ${acceptedUsers}`);
+        if(acceptedUsers.length === 0 ) {
+            console.log("We need more peops in the group", acceptedUsers);
+        let rejectedUsersString = userMentions(randomMembers);
+        bot.say({channel: CHANNEL, text: `I dag var det ingen som ville fika :cry:, fy fabian for er: ${rejectedUsersString}`})
+            return; 
         }
 
-        let usersString = userMentions(users);
+        let usersString = userMentions(acceptedUsers);
 
         // Random buyer. Poor person.
-        let responsibleUser = userMention(_.sample(members, numberOfChosenMembers));        
+        let responsibleUser = userMention(acceptedUsers[0]);        
         //let responsibleUser = userMention({id: "UDU6KE0A0"});
 
         console.log("This person is chosen to buy stuff:", responsibleUser);
-        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${usersString} fika tillsammans i lunchrummet pa andra vaningen i glasgarden:tada:\n ${responsibleUser} koper fika och gor utlagg. NRK betalar.\n Blev det inte din tur idag?\n Du far en ny chans i morgon :nerd_face:`})
+        bot.say({channel: CHANNEL, text: `Tjabba tjena allihopa!\n Klockan 14:00 skall ${usersString} fika tillsammans i lunchrummet på andra våningen i glasgården :tada:\n ${responsibleUser} lånar kantinakortet från Lena och köper fika. NRK betalar.\n Blev det inte din tur idag?\n Du får en ny chans i morgon :nerd_face:`})
       })
     });
 });
 
 function userMentions(users) {
     if(users) {
-        return users.map(user => userMention(user)).join(' ');
+        return users.map(user => userMention(user)).join(', ').replace(/\,(?=[^,]*$)/, ' och');
     }
     return '';
 }
@@ -177,7 +180,7 @@ function startCrontab(bot) {
 cron.schedule('* * * * *', () => {  
     console.log(pendingInvitations)
   pendingInvitations.forEach((pendingInvitation) => {
-    const {user, conversation, resolve, reject} = pendingInvitation;
+    const {user, conversation, resolve} = pendingInvitation;
     if (pendingInvitation.isRepeated) {
       conversation.repeat();
       conversation.next();
@@ -200,7 +203,7 @@ cron.schedule('* * * * *', () => {
         callback: function(response,convo) {
           convo.say('Tråkmåns.. jaja kanske en annan gång då :D');
           convo.next();
-          reject();
+          resolve();
         }
       },
       {
